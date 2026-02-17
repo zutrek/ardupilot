@@ -7,7 +7,6 @@
 
 #include "AC_DroneShowManager.h"
 #include "DroneShow_Constants.h"
-#include "skybrush/trajectory.h"
 
 extern const AP_HAL::HAL &hal;
 
@@ -77,6 +76,7 @@ bool AC_DroneShowManager::_load_show_file_from_storage()
     // any memory used by the previously loaded show
     sb_screenplay_clear(&_screenplay);
     sb_screenplay_scene_clear_contents(&_main_show_scene);
+    sb_show_controller_notify_screenplay_changed(&_show_controller);
     sb_show_controller_update_time_msec(&_show_controller, 0);
     if (_show_data)
     {
@@ -170,7 +170,7 @@ bool AC_DroneShowManager::_load_show_file_from_storage()
     {
         // Since the screenplay was updated, we need to let the show controller know
         // that any cached outputs are now invalid
-        sb_show_controller_invalidate_output(&_show_controller);
+        sb_show_controller_notify_screenplay_changed(&_show_controller);
 
         if (!_recalculate_trajectory_properties())
         {
