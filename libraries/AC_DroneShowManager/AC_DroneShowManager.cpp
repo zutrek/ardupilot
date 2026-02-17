@@ -20,7 +20,6 @@
 #include "DroneShow_Constants.h"
 #include "DroneShowLEDFactory.h"
 #include "DroneShowPyroDeviceFactory.h"
-#include "skybrush/refcount.h"
 
 extern const AP_HAL::HAL &hal;
 

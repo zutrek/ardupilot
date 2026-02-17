@@ -6,7 +6,6 @@
 #include "AC_DroneShowManager.h"
 #include "AC_DroneShowManager/DroneShow_Enums.h"
 #include "DroneShow_CustomPackets.h"
-#include "skybrush/control.h"
 
 #define NO_MORE_MESSAGES { MSG_LAST, 0 }
 

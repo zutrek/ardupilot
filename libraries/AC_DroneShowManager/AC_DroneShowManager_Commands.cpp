@@ -7,9 +7,6 @@
 #include "DroneShow_Constants.h"
 #include "DroneShow_CustomPackets.h"
 #include "DroneShowPyroDevice.h"
-#include "include/mavlink/v2.0/all/mavlink.h"
-#include "skybrush/basic_types.h"
-#include "skybrush/trajectory.h"
 
 static bool uint64_sub_safe(uint64_t a, uint64_t b, int32_t* result);
 

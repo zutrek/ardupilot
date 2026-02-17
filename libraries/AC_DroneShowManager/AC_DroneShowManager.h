@@ -20,7 +20,6 @@
 
 #include "DroneShow_Enums.h"
 #include "DroneShow_FenceConfig.h"
-#include "skybrush/control.h"
 
 class DroneShowLEDFactory;
 class DroneShowLED;

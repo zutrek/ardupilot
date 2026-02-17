@@ -3,8 +3,6 @@
 #include "AC_DroneShowManager.h"
 #include "AC_DroneShowManager/DroneShow_Enums.h"
 #include "DroneShowPyroDevice.h"
-#include "LogStructure.h"
-#include "skybrush/control.h"
 
 const float EVENT_TIMING_TOLERANCE_SEC = 3.0f;
 
