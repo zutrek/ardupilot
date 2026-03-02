@@ -472,6 +472,9 @@ bool AC_DroneShowManager::_handle_time_axis_configuration_packet(void* data, uin
                 SB_DECREF(rth_trajectory);
 
                 sb_trajectory_player_destroy(&player);
+                
+                // Log the details of the CRTH trigger for debugging purposes
+                write_crth_trigger_log_message(rth_start_time, start);
             }
             
             // Use a fixed light program with RTH color

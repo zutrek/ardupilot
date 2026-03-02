@@ -10,7 +10,13 @@ void AC_DroneShowManager::write_show_status_log_message() const
     Vector3f dist;
     ssize_t scene;
     float show_clock_sec;
-
+    const sb_control_output_t* output = sb_show_controller_get_current_output(&_show_controller);
+    sb_vector3_t position;
+    
+    if (!sb_control_output_get_position_if_set(output, &position)) {
+        memset(&position, 0, sizeof(position));
+    }
+    
     get_last_rgb_led_color(color);
     get_distance_from_desired_position(dist);
     get_scene_index_and_show_clock_within_scene(&scene, &show_clock_sec);
@@ -22,6 +28,9 @@ void AC_DroneShowManager::write_show_status_log_message() const
         stage           : static_cast<uint8_t>(get_stage_in_drone_show_mode()),
         scene           : static_cast<uint8_t>(scene),
         show_clock_ms   : static_cast<int32_t>(show_clock_sec * 1000.0f),
+        x               : position.x / 1000.0f,   // convert from millimeters to meters
+        y               : position.y / 1000.0f,   // convert from millimeters to meters
+        z               : position.z / 1000.0f,   // convert from millimeters to meters
         red             : color.red,
         green           : color.green,
         blue            : color.blue,
@@ -76,6 +85,22 @@ void AC_DroneShowManager::write_show_event_log_message(
         result          : static_cast<uint8_t>(result),
     };
 
+    AP::logger().WriteBlock(&pkt, sizeof(pkt));
+}
+
+// Write a message containing details about a collective RTH trigger
+void AC_DroneShowManager::write_crth_trigger_log_message(float rth_start_time_sec, sb_vector3_t start) const
+{
+    const struct log_CollectiveRTHTrigger pkt {
+        LOG_PACKET_HEADER_INIT(LOG_CRTH_TRIGGER_MSG),
+        time_us           : AP_HAL::micros64(),
+        wall_clock_ms     : get_elapsed_time_since_start_msec(),
+        rth_start_time_ms : static_cast<uint32_t>(rth_start_time_sec * 1000.0f),
+        start_x           : start.x / 1000.0f,   // convert from millimeters to meters
+        start_y           : start.y / 1000.0f,   // convert from millimeters to meters
+        start_z           : start.z / 1000.0f,   // convert from millimeters to meters
+    };
+    
     AP::logger().WriteBlock(&pkt, sizeof(pkt));
 }
 

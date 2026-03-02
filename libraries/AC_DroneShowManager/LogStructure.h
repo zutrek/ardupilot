@@ -6,7 +6,8 @@
     LOG_DRONE_SHOW_MSG, \
     LOG_FENCE_STATUS_MSG, \
     LOG_DRONE_SHOW_EVENT_MSG, \
-    LOG_SCREENPLAY_ENTRY_MSG
+    LOG_SCREENPLAY_ENTRY_MSG, \
+    LOG_CRTH_TRIGGER_MSG
 
 // @LoggerMessage: SHOW
 // @Description: Drone show mode information
@@ -29,6 +30,9 @@ struct PACKED log_DroneShowStatus {
     uint8_t stage;
     uint8_t scene;
     int32_t show_clock_ms;
+    float x;
+    float y;
+    float z;
     uint8_t red;
     uint8_t green;
     uint8_t blue;
@@ -104,12 +108,32 @@ struct PACKED log_ScreenplayEntry {
     float final_rate;
 };
 
+// @LoggerMessage: CRTH
+// @Description: Collective RTH trigger log
+// @Field: TimeUS: Time since system startup
+// @Field: ClockMS: Time since the start of the show in wall clock time
+// @Field: StartMS: Start time of the chosen collective RTH plan
+// @Field: StartX: X coordinate of the start of the RTH trajectory
+// @Field: StartY: Y coordinate of the start of the RTH trajectory
+// @Field: StartZ: Z coordinate of the start of the RTH trajectory
+struct PACKED log_CollectiveRTHTrigger {
+    LOG_PACKET_HEADER;
+    uint64_t time_us;
+    int32_t wall_clock_ms;
+    uint32_t rth_start_time_ms;
+    float start_x;
+    float start_y;
+    float start_z;
+};
+
 #define LOG_STRUCTURE_FROM_DRONE_SHOW \
     { LOG_DRONE_SHOW_MSG, sizeof(log_DroneShowStatus),                  \
-      "SHOW", "QiBBiBBBff", "TimeUS,ClockMS,Stage,Scene,SceneMS,R,G,B,HDist,VDist", "ss--s---mm", "FC--C---BB" }, \
+      "SHOW", "QiBBifffBBBff", "TimeUS,ClockMS,Stage,Scene,SceneMS,X,Y,Z,R,G,B,HDist,VDist", "ss--smmm---mm", "FC--C--------" }, \
     { LOG_FENCE_STATUS_MSG, sizeof(log_FenceStatus),                    \
       "FNCS", "QBBHBBH", "TimeUS,GeoEn,GeoB,GeoCnt,HardB,BubbleB,BubbleCnt", "s------", "F------" }, \
     { LOG_DRONE_SHOW_EVENT_MSG, sizeof(log_DroneShowEvent),              \
       "SBEV", "QiBiBBIB", "TimeUS,ClockMS,Scene,SceneMS,Type,Subtype,Payload,Result", "ss-s----", "FC-C----" }, \
     { LOG_SCREENPLAY_ENTRY_MSG, sizeof(log_ScreenplayEntry),             \
-      "SBSP", "QBBBQIff", "TimeUS,Seq,Scene,Index,Origin,Duration,IR,FR", "s---ss--", "F---CC--" }
+      "SBSP", "QBBBQIff", "TimeUS,Seq,Scene,Index,Origin,Duration,IR,FR", "s---ss--", "F---CC--" }, \
+    { LOG_CRTH_TRIGGER_MSG, sizeof(log_CollectiveRTHTrigger),            \
+      "CRTH", "QiIfff", "TimeUS,ClockMS,StartMS,StartX,StartY,StartZ", "sssmmm", "FCC---" }

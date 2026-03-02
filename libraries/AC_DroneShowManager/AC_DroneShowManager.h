@@ -501,7 +501,10 @@ public:
 
     // Returns whether the manager uses GPS time to start the show
     bool uses_gps_time_for_show_start() const { return _params.time_sync_mode == TimeSyncMode_GPS; }
-
+    
+    // Writes a message containing the trigger of a collective RTL maneuver into the log
+    void write_crth_trigger_log_message(float rth_start_time_sec, sb_vector3_t start) const;
+    
     // Writes a message containing a summary of the gefence status into the log
     void write_fence_status_log_message() const;
 
