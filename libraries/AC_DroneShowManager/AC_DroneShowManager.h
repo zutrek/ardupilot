@@ -930,6 +930,9 @@ private:
 
     // Requests the vehicle to switch to drone show mode.
     virtual void _request_switch_to_show_mode() {};
+    
+    // Generic debug request handler
+    bool _run_debug_request_handler(const mavlink_command_int_t &packet) WARN_IF_UNUSED;
 
     bool _load_show_file_from_storage();
     void _set_show_data_and_take_ownership(uint8_t *value);

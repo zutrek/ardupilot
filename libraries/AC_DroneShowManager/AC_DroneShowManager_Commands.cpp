@@ -116,6 +116,9 @@ MAV_RESULT AC_DroneShowManager::handle_command_int_packet(const mavlink_command_
             } else {
                 return MAV_RESULT_FAILED;
             }
+        } else if (is_equal(packet.param1, 1.0f)) {
+            // Reserved for debugging purposes
+            return _run_debug_request_handler(packet) ? MAV_RESULT_ACCEPTED : MAV_RESULT_FAILED;
         }
 
         // Unsupported command code
