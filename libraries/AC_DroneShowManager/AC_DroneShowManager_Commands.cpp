@@ -576,6 +576,9 @@ exit:
         sb_screenplay_destroy(&_screenplay);
         _screenplay = new_screenplay;
         
+        // Notify the show controller that the screenplay has been updated
+        sb_show_controller_notify_screenplay_changed(&_show_controller);
+
         // Add log entries containing the current screenplay
         write_screenplay_log_messages(header->seq_no, NULL);
     } else {
