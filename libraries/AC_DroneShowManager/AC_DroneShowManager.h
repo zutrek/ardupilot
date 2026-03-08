@@ -367,6 +367,12 @@ public:
         );
     }
     
+    // Returns whether any motor output from show mode is disabled due to testing
+    // purposes.
+    bool is_motor_output_disabled() const {
+        return _has_option(DroneShowOption_PreventMotorOutput);
+    }
+    
     // Returns whether the performance of the show has finished, based on the current
     // state and output of the show controller. The return value of this function can
     // be used to trigger the post-show action.

@@ -527,6 +527,11 @@ void ModeDroneShow::takeoff_start()
     // now that we are past the basic checks, we can commit ourselves to entering
     // takeoff mode
     _set_stage(DroneShow_Takeoff);
+    
+    // early exit if the motor output is prevented
+    if (copter.g2.drone_show_manager.is_motor_output_disabled()) {
+        return;
+    }
 
     // set the target altitude of the takeoff
     target_alt = current_alt + copter.g2.drone_show_manager.get_takeoff_altitude_cm();
@@ -537,7 +542,7 @@ void ModeDroneShow::takeoff_start()
     // clear I term when we're taking off
     pos_control->init_z_controller();
 
-    // initialise alt for WP_NAVALT_MIN and set completion alt
+    // initialise alt for WP_NAVALT_MIN and set completion altitude.
     auto_takeoff.start(target_alt, /* terrain_alt = */ false);
 
     // part adapted from ModeAuto::takeoff_start() ends here
@@ -576,16 +581,22 @@ void ModeDroneShow::takeoff_run()
 {
     bool completed = false;
 
-    auto_takeoff.run();
-
-    if (!motors->armed()) {
-        // if the motors are not armed any more, something is wrong so move to the
-        // error stage. This typically happens if we crash during takeoff.
-        gcs().send_text(MAV_SEVERITY_CRITICAL, "Motors disarmed during takeoff");
-        error_start();
-    } else if (takeoff_completed()) {
-        // if the takeoff has finished, move to the next stage
+    if (copter.g2.drone_show_manager.is_motor_output_disabled()) {
+        // if the motor output is prevented, move on to the performing stage as soon as
+        // possible
         completed = true;
+    } else {
+        auto_takeoff.run();
+    
+        if (!motors->armed()) {
+            // if the motors are not armed any more, something is wrong so move to the
+            // error stage. This typically happens if we crash during takeoff.
+            gcs().send_text(MAV_SEVERITY_CRITICAL, "Motors disarmed during takeoff");
+            error_start();
+        } else if (takeoff_completed()) {
+            // if the takeoff has finished, move to the next stage
+            completed = true;
+        }
     }
 
     if (completed) {
@@ -752,7 +763,7 @@ void ModeDroneShow::performing_run()
     // call regular guided flight mode run function
     copter.mode_guided.run();
 
-    if (!motors->armed()) {
+    if (!show_manager->is_motor_output_disabled() && !motors->armed()) {
         // if the motors are not armed any more, something is wrong so move to the
         // error stage. This typically happens if we crash during a show.
         gcs().send_text(MAV_SEVERITY_CRITICAL, "Motors disarmed during show");
@@ -1002,14 +1013,18 @@ bool ModeDroneShow::send_guided_mode_command_during_performance()
             // Nothing to do, we have reached the end and we will switch to the
             // next stage soon
         } else {
-            // Send the generated command
-            copter.mode_guided.set_destination_posvelaccel(
-                command.pos, command.vel, command.acc,
-                /* use_yaw = */ true,
-                command.yaw_cd, /* [cd] */
-                /* use_yaw_rate = */ true,
-                command.yaw_rate_cds  /* [cd/s] */
-            );
+            // Send the generated command -- unless the motor output is prevented in
+            // the show manager, in which case we just _pretend_ that the command was
+            // sent but we don' actually do anything
+            if (!show_manager->is_motor_output_disabled()) {
+                copter.mode_guided.set_destination_posvelaccel(
+                    command.pos, command.vel, command.acc,
+                    /* use_yaw = */ true,
+                    command.yaw_cd, /* [cd] */
+                    /* use_yaw_rate = */ true,
+                    command.yaw_rate_cds  /* [cd/s] */
+                );
+            }
 
             show_manager->notify_guided_mode_command_sent(command);
         }
@@ -1037,8 +1052,12 @@ bool ModeDroneShow::send_guided_mode_command_during_performance()
 bool ModeDroneShow::start_motors_if_not_running()
 {
     bool success = false;
-
-    if (AP::arming().is_armed()) {
+    
+    if (copter.g2.drone_show_manager.is_motor_output_disabled()) {
+        // Motor output is disabled by the show manager; pretend that we have started
+        // the motors successfully 
+        success = true;
+    } else if (AP::arming().is_armed()) {
         // Already armed
         success = true;
     } else if (_prevent_arming_until_msec > AP_HAL::millis()) {

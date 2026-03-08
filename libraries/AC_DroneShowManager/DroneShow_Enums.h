@@ -106,6 +106,7 @@ enum DroneShowEventResult : uint8_t {
 enum DroneShowOptionFlag {
     DroneShowOption_DisableFailsafeLights = 1,
     DroneShowOption_CorrectLandingPositionForCircularTrajectories = 2,
+    DroneShowOption_PreventMotorOutput = 4,
 };
 
 // Enum representing the telemetry profiles supported by the parameter set
