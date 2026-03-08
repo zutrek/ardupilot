@@ -181,9 +181,11 @@ bool AC_DroneShowManager::get_current_guided_mode_command_to_send(
     bool altitude_locked_above_takeoff_altitude
 ) {
     Location loc;
-
-    static uint8_t invalid_velocity_warning_sent = 0;
-    static uint8_t invalid_yaw_warning_sent = 0;
+    
+    const uint8_t POSITION_WARNING = 1;
+    const uint8_t VELOCITY_WARNING = 2;
+    const uint8_t YAW_WARNING = 4;
+    static uint8_t warnings_sent = 0;
     // static uint8_t counter = 0;
 
     float elapsed = get_elapsed_time_since_start_sec();
@@ -215,10 +217,10 @@ bool AC_DroneShowManager::get_current_guided_mode_command_to_send(
         // mode controller
         if (isnan(yaw_cd) || isinf(yaw_cd) || isnan(yaw_rate_cd_s) || isinf(yaw_rate_cd_s))
         {
-            if (!invalid_yaw_warning_sent)
+            if (!(warnings_sent & YAW_WARNING))
             {
                 gcs().send_text(MAV_SEVERITY_WARNING, "Invalid yaw or yaw rate command; not using yaw control");
-                invalid_yaw_warning_sent = true;
+                warnings_sent |= YAW_WARNING;
             }
         }
         else
@@ -257,10 +259,10 @@ bool AC_DroneShowManager::get_current_guided_mode_command_to_send(
             // mode controller
             if (command.vel.is_nan() || command.vel.is_inf())
             {
-                if (!invalid_velocity_warning_sent)
+                if (!(warnings_sent & VELOCITY_WARNING))
                 {
                     gcs().send_text(MAV_SEVERITY_WARNING, "Invalid velocity command; using zero");
-                    invalid_velocity_warning_sent = true;
+                    warnings_sent |= VELOCITY_WARNING;
                 }
                 command.vel.zero();
             }
@@ -302,6 +304,11 @@ bool AC_DroneShowManager::get_current_guided_mode_command_to_send(
         // mode controller
         if (command.pos.is_nan() || command.pos.is_inf())
         {
+            if (!(warnings_sent & POSITION_WARNING))
+            {
+                gcs().send_text(MAV_SEVERITY_WARNING, "Invalid position command");
+                warnings_sent |= POSITION_WARNING;
+            }
             return false;
         }
 
