@@ -7,6 +7,7 @@
 
 #include "AC_DroneShowManager.h"
 #include "DroneShow_Constants.h"
+#include "skybrush/rth_plan.h"
 
 extern const AP_HAL::HAL &hal;
 
@@ -227,6 +228,18 @@ bool AC_DroneShowManager::_load_show_file_from_storage()
         }
     }
     
+    if (success)
+    {
+        // set reasonable parameters for the RTH plan
+        sb_rth_plan_t* rth_plan = sb_screenplay_get_rth_plan(&_screenplay);
+        if (rth_plan)
+        {
+            sb_rth_plan_set_default_acceleration_limit(rth_plan, 4000.0f);
+            sb_rth_plan_set_default_landing_velocity(rth_plan, get_landing_speed_m_sec() * 1000.0f);  /* [m/s] --> [mm/s] */
+            sb_rth_plan_set_default_landing_altitude(rth_plan, _params.takeoff_altitude_m * 1000.0f);  /* [m] --> [mm] */
+        }
+    }
+
     if (success)
     {
         // move ownership of the show data to the class member
