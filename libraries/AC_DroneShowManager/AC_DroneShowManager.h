@@ -247,12 +247,6 @@ public:
     // zero, which marks the end of the list.
     const TelemetryRequest* get_preferred_telemetry_messages() const;
 
-    // Returns the landing time relative to the start of the show
-    float get_relative_landing_time_sec_on_show_clock() const { return _trajectory_stats.landing_time_sec; }
-
-    // Returns the takeoff time relative to the start of the show
-    float get_relative_takeoff_time_sec_on_show_clock() const { return _trajectory_stats.takeoff_time_sec; }
-
     // Returns the start time in microseconds. Depending on the value of the
     // SHOW_SYNC_MODE parameter, this might be an internal timestamp or a
     // UNIX timestamp. Do _not_ use this method for anything else than

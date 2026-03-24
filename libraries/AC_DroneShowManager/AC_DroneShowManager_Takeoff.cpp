@@ -46,7 +46,7 @@ float AC_DroneShowManager::get_takeoff_speed_m_sec() const {
 
 float AC_DroneShowManager::get_time_until_takeoff_sec() const
 {
-    return get_time_until_start_sec() + get_relative_takeoff_time_sec_on_show_clock();
+    return get_time_until_start_sec() + _trajectory_stats.takeoff_time_sec;
 }
 
 bool AC_DroneShowManager::is_prepared_to_take_off() const
