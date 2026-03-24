@@ -211,11 +211,7 @@ bool AC_DroneShowManager::_load_show_file_from_storage()
             sb_trajectory_t* trajectory = scene ? sb_screenplay_scene_get_trajectory(scene) : nullptr;
             
             if (trajectory) {
-                if (sb_screenplay_scene_set_duration_msec(scene, _trajectory_stats.duration_msec) != SB_SUCCESS) {
-                    hal.console->printf("Error while setting scene duration\n");
-                    success = false;
-                    break;
-                }
+                sb_screenplay_scene_set_duration_msec(scene, _trajectory_stats.duration_msec);
             }
 
             if (event_list && _params.pyro_spec.time_compensation_msec != 0)
@@ -238,6 +234,7 @@ bool AC_DroneShowManager::_load_show_file_from_storage()
         sb_screenplay_scene_t* first_scene = sb_screenplay_get_scene_ptr(&_screenplay, 0);
         if (first_scene)
         {
+            sb_screenplay_scene_set_tag(first_scene, SceneTag_MainShow);
             sb_screenplay_scene_update_contents_from(&_main_show_scene, first_scene);
         }
     }

@@ -114,3 +114,10 @@ enum TelemetryProfile {
     TelemetryProfile_Standard = 0,
     TelemetryProfile_Compact = 1
 };
+
+// Enum containing the tags that we use to identify the main scene and the collective
+// RTH scene in the screenplay
+enum SceneTag {
+    SceneTag_MainShow = 1,
+    SceneTag_CRTH = 2
+};

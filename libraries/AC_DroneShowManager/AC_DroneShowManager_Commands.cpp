@@ -6,6 +6,7 @@
 #include "AC_DroneShowManager.h"
 #include "DroneShow_Constants.h"
 #include "DroneShow_CustomPackets.h"
+#include "DroneShow_Enums.h"
 #include "DroneShowPyroDevice.h"
 
 static bool uint64_sub_safe(uint64_t a, uint64_t b, int32_t* result);
@@ -416,6 +417,7 @@ bool AC_DroneShowManager::_handle_time_axis_configuration_packet(void* data, uin
         // or for a coordinated RTH plan
         if (scene_header->scene_id == 0) {
             // Main show
+            sb_screenplay_scene_set_tag(scene, SceneTag_MainShow);
             sb_screenplay_scene_update_contents_from(scene, &_main_show_scene);
         } else if ((scene_header->scene_id & 0xC000) == 0xC000) {
             // Coordinated RTH plan, starting at the number of seconds described by the 
@@ -427,6 +429,9 @@ bool AC_DroneShowManager::_handle_time_axis_configuration_packet(void* data, uin
                 // Could not evaluate RTH plan at the given time
                 goto exit;
             }
+            
+            // Update scene tag to mark it as a CRTH scene
+            sb_screenplay_scene_set_tag(scene, SceneTag_CRTH);
 
             // rth_plan_entry contains the start time of the RTH plan, but we don't
             // need that -- we want to create a trajectory that starts at T=0 in
