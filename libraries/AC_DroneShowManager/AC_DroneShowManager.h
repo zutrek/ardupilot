@@ -814,9 +814,6 @@ private:
     // has passed
     void _check_radio_failsafe();
 
-    // Clears the start time of the drone show after a successful landing
-    void _clear_start_time_after_landing();
-
     // Clears the start time of the drone show if it was set by the user with the RC switch
     void _clear_start_time_if_set_by_switch();
 
@@ -901,9 +898,6 @@ private:
 
     // Handles a MAVLink LED_CONTROL message from the ground station.
     bool _handle_led_control_message(const mavlink_message_t& msg);
-
-    // Callback that is called when entering the "landed" stage
-    void _handle_switch_to_landed_state();
     
     // Handles a time axis configuration packet whose length has already been verified
     bool _handle_time_axis_configuration_packet(void* data, uint8_t length);

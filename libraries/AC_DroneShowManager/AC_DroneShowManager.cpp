@@ -449,11 +449,6 @@ void AC_DroneShowManager::notify_drone_show_mode_entered_stage(DroneShowModeStag
     // Force-update preflight checks so we see the errors immediately if we
     // switched to the "waiting for start time" stage
     _update_preflight_check_result(/* force = */ true);
-
-    // Call callbacks for certain stages
-    if (_stage_in_drone_show_mode == DroneShow_Landed) {
-        _handle_switch_to_landed_state();
-    }
 }
 
 void AC_DroneShowManager::notify_drone_show_mode_exited()
