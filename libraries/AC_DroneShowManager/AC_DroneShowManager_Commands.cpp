@@ -9,8 +9,6 @@
 #include "DroneShow_Enums.h"
 #include "DroneShowPyroDevice.h"
 
-static bool uint64_sub_safe(uint64_t a, uint64_t b, int32_t* result);
-
 MAV_RESULT AC_DroneShowManager::handle_command_int_packet(const mavlink_command_int_t &packet)
 {
     switch (packet.command) {
@@ -327,7 +325,6 @@ bool AC_DroneShowManager::_handle_time_axis_configuration_packet(void* data, uin
     CustomPackets::time_axis_config_scene_header_t* scene_header;
     CustomPackets::time_axis_config_scene_entry_t* entry;
     uint64_t epoch_msec;
-    int32_t origin_msec;
     uint8_t num_scenes, num_entries, scene_index, entry_index;
     uint8_t *ptr, *end;
     sb_screenplay_t new_screenplay;
@@ -362,8 +359,19 @@ bool AC_DroneShowManager::_handle_time_axis_configuration_packet(void* data, uin
     // interpreted
     if (uses_gps_time_for_show_start()) {
         // When using GPS time for show start, the origin is assumed to be an absolute
-        // time in milliseconds since the UNIX epoch
-        epoch_msec = _start_time_unix_usec / 1000;
+        // time in milliseconds since the UNIX epoch, written in the header, and we
+        // use this to update the SHOW_START_TIME parameter.
+        epoch_msec = header->start_time_msec;
+        if (epoch_msec > 0) {
+            // Start time set, but we need to convert from milliseconds to seconds
+            // since the start of the GPS week
+            _params.start_time_gps_sec.set(
+                ((epoch_msec / 1000) - UNIX_OFFSET_MSEC) % AP_MSEC_PER_WEEK
+            );
+        } else {
+            // Start time not set
+            _params.start_time_gps_sec.set(-1);
+        }
     } else {
         // When using the internal clock for show start, the origin is assumed to be
         // relative to the show start time. This is not really recommended but we need
@@ -392,7 +400,7 @@ bool AC_DroneShowManager::_handle_time_axis_configuration_packet(void* data, uin
     
     // Make sure that the new screenplay refers to the same RTH plan as the existing one
     sb_screenplay_set_rth_plan(&new_screenplay, sb_screenplay_get_rth_plan(&_screenplay));
-
+    
     // Header processed; now process each of the scenes
     ptr = reinterpret_cast<uint8_t*>(data);
     end = ptr + length;
@@ -501,7 +509,7 @@ bool AC_DroneShowManager::_handle_time_axis_configuration_packet(void* data, uin
                 sb_screenplay_scene_set_light_program(scene, rth_light_program);
                 SB_XDECREF(rth_light_program);
             }
-       } else {
+        } else {
             // Unknown scene ID; may be used in the future but it has no meaning now
             goto exit;
         }
@@ -516,11 +524,7 @@ bool AC_DroneShowManager::_handle_time_axis_configuration_packet(void* data, uin
         }
         
         // First, we set the origin of the new time axis
-        if (!uint64_sub_safe(scene_header->origin_msec, epoch_msec, &origin_msec)) {
-            // Overflow or underflow
-            goto exit;
-        }
-        sb_time_axis_set_origin_msec(time_axis, origin_msec);
+        sb_time_axis_set_origin_msec(time_axis, scene_header->origin_msec);
         
         // Add segments
         for (entry_index = 0; entry_index < num_entries; entry_index++) {
@@ -572,7 +576,7 @@ bool AC_DroneShowManager::_handle_time_axis_configuration_packet(void* data, uin
         // the time axis
         sb_screenplay_scene_set_duration_msec(scene, sb_time_axis_get_total_duration_msec(time_axis));
     }
-    
+
     success = true;
 
 exit:
@@ -596,35 +600,4 @@ exit:
     }
     
     return success;
-}
-
-/**
- * @brief Safely compute the difference of two uint64_t values and store the result
- *        in an int32_t variable.
- * 
- * @param a The minuend
- * @param b The subtrahend
- * @param result Pointer to the variable where the result will be stored
- * @return true if the subtraction was successful and the result fits in int32_t;
- *         false if an overflow or underflow occurred or the result does not fit
- */
-static bool uint64_sub_safe(uint64_t a, uint64_t b, int32_t* result)
-{
-    if (a >= b) {
-        uint64_t diff = a - b;
-        if (diff <= static_cast<uint64_t>(std::numeric_limits<int32_t>::max())) {
-            *result = static_cast<int32_t>(diff);
-            return true;
-        } else {
-            return false;
-        }
-    } else {
-        uint64_t diff = b - a;
-        if (diff <= static_cast<uint64_t>(std::numeric_limits<int32_t>::max())) {
-            *result = -static_cast<int32_t>(diff);
-            return true;
-        } else {
-            return false;
-        }
-    }
 }

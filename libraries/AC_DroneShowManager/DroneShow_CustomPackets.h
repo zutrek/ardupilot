@@ -116,15 +116,23 @@ namespace CustomPackets {
         
         // Number of scenes in the time axia configuration.
         uint8_t num_scenes;
+        
+        // Two reserved bytes for future extension
+        uint16_t reserved;
+        
+        // Start time of the show, milliseconds since the UNIX epoch. Currently rounded
+        // to the nearest second, but this may change in the future. Zero means that the
+        // start time is not set yet.
+        uint64_t start_time_msec;
     } time_axis_config_header_t;
     
     typedef struct PACKED {
         // Number of finite time axis segments in the scene.
         uint8_t num_entries;
         
-        // Number of milliseconds since the UNIX epoch at the time when the show
-        // clock of this scene is at 00:00.
-        uint64_t origin_msec;
+        // Number of milliseconds since the start of the show (from the header) when 
+        // the show clock of this scene is at 00:00.
+        uint32_t origin_msec;
         
         // Scene identifier; specifies whether the scene is the main show or a
         // coordinated return-to-home scene.
