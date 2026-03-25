@@ -308,9 +308,8 @@ public:
     float get_time_until_start_sec() const;
 
     // Returns the number of seconds left until the time when we should take off,
-    // assuming that the show is being played back at real-time and no changes are
-    // made to the show clock rate.
-    float get_time_until_takeoff_sec() const;
+    // assuming that there will be no changes to the time axis configuration of the show
+    float get_time_until_takeoff_sec();
 
     // Returns the velocity feed-forward gain factor to use during velocity control
     float get_velocity_feedforward_gain() const { return _params.velocity_feedforward_gain; }
@@ -682,8 +681,23 @@ private:
     // Controller that manages the trajectory player, the light program player,
     // the yaw player, the event list and the time axis.
     sb_show_controller_t _show_controller;
-
+    
+    // Structure holding information about the current trajectory, including the
+    // takeoff time, the landing time, the total duration and the takeoff location.
+    // Takeoff and landing times are according to the _show clock_.
     sb_trajectory_stats_t _trajectory_stats;
+    
+    // Projected duration of the time interval from the start of the show to the
+    // takeoff, in wall clock time, according to the current screenplay of the show,
+    // under the assumption that the screenplay will not change. This is used to
+    // trigger the motor start command and the takeoff command at the right time.
+    // 
+    // The variable must be updated whenever the screenplay is changed or a new
+    // trajectory is loaded.
+    // 
+    // NaN means that the takeoff time was not calculated yet and needs to be
+    // recalculated.
+    float _projected_wall_clock_time_at_takeoff_sec;
 
     // Result of the drone show specific preflight checks. Updated periodically
     // from _update_preflight_check_result(). See the values from the
@@ -897,6 +911,12 @@ private:
     // Returns whether the given option flag is set in the SHOW_OPTIONS parameter
     bool _has_option(DroneShowOptionFlag option) const {
         return (_params.show_options & option) != 0;
+    }
+    
+    // Invalidates the projected time until takeoff, so it will be recalculated later
+    // if needed.
+    void _invalidate_projected_wall_clock_time_at_takeoff() {
+        _projected_wall_clock_time_at_takeoff_sec = NAN;
     }
 
     // Returns whether the drone is close enough to its expected position during a show.

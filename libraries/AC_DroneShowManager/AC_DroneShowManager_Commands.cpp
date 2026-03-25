@@ -584,6 +584,10 @@ exit:
         // Notify the show controller that the screenplay has been updated
         sb_show_controller_notify_screenplay_changed(&_show_controller);
 
+        // Invalidate the projected takeoff time because it depends on the screenplay.
+        // It will be realculated later if needed.
+        _invalidate_projected_wall_clock_time_at_takeoff();
+
         // Add log entries containing the current screenplay
         write_screenplay_log_messages(header->seq_no, NULL);
     } else {

@@ -79,6 +79,7 @@ bool AC_DroneShowManager::_load_show_file_from_storage()
     sb_screenplay_scene_clear_contents(&_main_show_scene);
     sb_show_controller_notify_screenplay_changed(&_show_controller);
     sb_show_controller_update_time_msec(&_show_controller, 0);
+    _invalidate_projected_wall_clock_time_at_takeoff();
     if (_show_data)
     {
         free(_show_data);
@@ -172,6 +173,7 @@ bool AC_DroneShowManager::_load_show_file_from_storage()
         // Since the screenplay was updated, we need to let the show controller know
         // that any cached outputs are now invalid
         sb_show_controller_notify_screenplay_changed(&_show_controller);
+        _invalidate_projected_wall_clock_time_at_takeoff();
 
         if (!_recalculate_trajectory_properties())
         {
@@ -349,6 +351,10 @@ bool AC_DroneShowManager::_recalculate_trajectory_properties()
         // This should ensure that is_trajectory_plausible() returns false
         _trajectory_stats.landing_time_sec = _trajectory_stats.takeoff_time_sec = -1;
     }
+    
+    // Invalidate the projected takeoff time because it depends on the trajectory
+    // stats. It will be realculated later if needed.
+    _invalidate_projected_wall_clock_time_at_takeoff();
 
     return true;
 }

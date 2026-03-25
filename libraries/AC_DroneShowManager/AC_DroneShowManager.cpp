@@ -46,7 +46,8 @@ AC_DroneShowManager::AC_DroneShowManager() :
     _pyro_device(0),
     _rgb_led(0),
     _rc_switches_blocked_until(0),
-    _boot_count(0)
+    _boot_count(0),
+    _projected_wall_clock_time_at_takeoff_sec(NAN)
 {
     bool ok = true;
 

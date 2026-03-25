@@ -44,9 +44,20 @@ float AC_DroneShowManager::get_takeoff_speed_m_sec() const {
     return result;
 }
 
-float AC_DroneShowManager::get_time_until_takeoff_sec() const
+float AC_DroneShowManager::get_time_until_takeoff_sec()
 {
-    return get_time_until_start_sec() + _trajectory_stats.takeoff_time_sec;
+    if (isnan(_projected_wall_clock_time_at_takeoff_sec)) {
+        _projected_wall_clock_time_at_takeoff_sec = sb_screenplay_get_time_sec_for_scene_tag_and_warped_time_in_scene(
+            &_screenplay, SceneTag_MainShow, _trajectory_stats.takeoff_time_sec
+        );
+        
+        if (isnan(_projected_wall_clock_time_at_takeoff_sec)) {
+            // This should not happen, but if it does, we just use infinity
+            _projected_wall_clock_time_at_takeoff_sec = INFINITY;
+        }
+    }
+
+    return get_time_until_start_sec() + _projected_wall_clock_time_at_takeoff_sec;
 }
 
 bool AC_DroneShowManager::is_prepared_to_take_off() const
