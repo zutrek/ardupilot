@@ -1,0 +1,191 @@
+# hw definition file for processing by chibios_pins.py
+# for AuraH7  AIO
+
+# MCU class and specific type
+MCU STM32H7xx STM32H743xx
+
+APJ_BOARD_ID AP_HW_AURAH7
+
+# crystal frequency, setup to use external oscillator
+OSCILLATOR_HZ 8000000
+
+FLASH_SIZE_KB 2048
+
+# bootloader takes first sector
+FLASH_RESERVE_START_KB 128
+
+
+# ChibiOS system timer
+STM32_ST_USE_TIMER 12
+define CH_CFG_ST_RESOLUTION 16
+
+#----------------------------------
+# USB and DEBUG
+#----------------------------------
+PA11 OTG_FS_DM OTG1                
+PA12 OTG_FS_DP OTG1                
+
+PA13 JTMS-SWDIO SWD                
+PA14 JTCK-SWCLK SWD
+#----------------------------------
+
+
+#----------------------------------
+# SPI1 for IMU1 (ICM42688-P)
+# external interrupt
+#----------------------------------
+PA5 SPI1_SCK SPI1
+PA6 SPI1_MISO SPI1
+PD7 SPI1_MOSI SPI1
+
+PC15 GYRO1_CS CS
+PB2 GYRO1_EXTI INPUT
+#----------------------------------
+
+
+#----------------------------------
+# SPI2 for IMU2 (ICM42688-P)
+#----------------------------------
+PB13 SPI2_SCK SPI2
+PB14 SPI2_MISO SPI2
+PB15 SPI2_MOSI SPI2
+PD14 GYRO2_CS CS
+PE15 GYRO2_EXTI INPUT
+#----------------------------------
+
+
+#----------------------------------
+# I2C Buses Pins and order definition
+#----------------------------------
+I2C_ORDER I2C2 I2C1
+
+# I2C1
+PB6 I2C1_SCL I2C1
+PB7 I2C1_SDA I2C1
+
+# I2C2
+PB10 I2C2_SCL I2C2
+PB11 I2C2_SDA I2C2
+#----------------------------------
+
+
+#==================================
+# LED   
+# white LED0 marked as B/E
+# blue LED0 marked as ACT
+#==================================
+define AP_NOTIFY_GPIO_LED_2_ENABLED 1
+PB3 LED0 OUTPUT LOW GPIO(90) # white
+PA15 LED1 OUTPUT LOW GPIO(91) # blue
+define HAL_GPIO_A_LED_PIN 91
+define HAL_GPIO_B_LED_PIN 90
+
+
+#----------------------------------
+# ADC
+#----------------------------------
+PC0 BATT_VOLTAGE_SENS ADC1 SCALE(1)
+PC1 BATT_CURRENT_SENS ADC1 SCALE(1)
+
+define HAL_BATT_MONITOR_DEFAULT 4
+define HAL_BATT_VOLT_PIN 10
+define HAL_BATT_CURR_PIN 11
+
+define HAL_BATT_VOLT_SCALE 11.0
+define HAL_BATT_CURR_SCALE 40.0
+#----------------------------------
+
+
+#----------------------------------
+# UARTs definition and order(and USB)
+
+# Ordine Logico:
+# SERIAL0 = Console USB
+# SERIAL1 = WiFi (Telem 1 - Mavlink Default)
+# SERIAL2 = ELRS (Receiver)
+# SERIAL3 = GPS (GPS 1 Default)
+#----------------------------------
+SERIAL_ORDER OTG1 UART4 USART3 USART2 
+
+# UART4 (Wi-Fi)
+PB9 UART4_TX UART4
+PB8 UART4_RX UART4
+
+# USART3 (ELRS-UART3)
+PD8 USART3_TX USART3
+PD9 USART3_RX USART3
+
+# USART2 (GPS-UART2)
+PD5 USART2_TX USART2
+PD6 USART2_RX USART2
+#---------------------------------
+
+
+#---------------------------------
+#PWM Outputs (Motors & LEDs)
+#---------------------------------
+# Motors
+PE9   TIM1_CH1 TIM1  PWM(1)  GPIO(50) BIDIR
+PE11  TIM1_CH2 TIM1  PWM(2)  GPIO(51) BIDIR
+PE13  TIM1_CH3  TIM1  PWM(3)  GPIO(52) BIDIR
+PE14  TIM1_CH4  TIM1  PWM(4)  GPIO(53) BIDIR
+
+#LEDs
+PA2  TIM2_CH3  TIM2  PWM(5)  GPIO(54) NODMA
+PA3  TIM2_CH4  TIM2  PWM(6)  GPIO(55) NODMA
+PA1  TIM2_CH2 TIM2 PWM(7) GPIO(56)    NODMA
+PA0  TIM2_CH1 TIM2 PWM(8) GPIO(57)    NODMA
+#---------------------------------
+
+#---------------------------------
+# MicroSD support
+#---------------------------------
+PC8 SDMMC1_D0 SDMMC1
+PC9 SDMMC1_D1 SDMMC1
+PC10 SDMMC1_D2 SDMMC1
+PC11 SDMMC1_D3 SDMMC1
+PC12 SDMMC1_CK SDMMC1
+PD2 SDMMC1_CMD SDMMC1
+#---------------------------------
+
+#La priorià è data alle SPI
+DMA_PRIORITY S*
+
+#Memoria FLASH dell'H743
+define HAL_STORAGE_SIZE 32768
+
+# use last 2 pages for flash storage
+# H743 has 16 pages of 128k each
+STORAGE_FLASH_PAGE 14
+
+# spi devices
+SPIDEV icm42688  SPI1 DEVID1 GYRO1_CS      MODE3  2*MHZ 16*MHZ   # Clock is 100Mhz so highest clock <= 24Mhz is 100Mhz/8
+SPIDEV icm42688_2 SPI2 DEVID2 GYRO2_CS     MODE3  2*MHZ 16*MHZ
+
+
+DMA_NOSHARE SPI1* SPI2*
+
+
+# no built-in compass, but probe the i2c bus for all possible
+# external compass types
+
+define ALLOW_ARM_NO_COMPASS
+define AP_COMPASS_PROBING_ENABLED 1
+define HAL_I2C_INTERNAL_MASK 0
+
+
+# two IMUs
+# AuRaH7-v1,      ICM42688P, ICM42688P
+IMU Invensensev3 SPI:icm42688 ROTATION_NONE
+IMU Invensensev3 SPI:icm42688_2 ROTATION_NONE
+
+define HAL_DEFAULT_INS_FAST_SAMPLE 1
+
+# DPS310 integrated on I2C2 bus, two possible choices
+BARO DPS310 I2C:0:0x76
+
+define HAL_OS_FATFS_IO 1
+
+
+# build ABIN for flash-from-bootloader support:
+env BUILD_ABIN True
