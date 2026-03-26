@@ -366,7 +366,7 @@ bool AC_DroneShowManager::_handle_time_axis_configuration_packet(void* data, uin
             // Start time set, but we need to convert from milliseconds to seconds
             // since the start of the GPS week
             _params.start_time_gps_sec.set(
-                ((epoch_msec / 1000) - UNIX_OFFSET_MSEC) % AP_MSEC_PER_WEEK
+                ((epoch_msec - UNIX_OFFSET_MSEC) % AP_MSEC_PER_WEEK) / 1000
             );
         } else {
             // Start time not set
